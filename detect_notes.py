@@ -53,12 +53,19 @@ def DetectLines(f_config, f_startPosX_int, f_frame):
     # get cropped frame
     croppedFrame = f_frame[0:f_config.m_noteDetectionLinePosY_int,
                            f_startPosX_int:f_startPosX_int+f_config.m_trackWidth_int]
+    
     # get grayscale frame
     # this conversion need to be at begining, to be able to handle np array like
     # screenshots from mss directly
     grayFrame = cv2.cvtColor(croppedFrame, cv2.COLOR_BGR2GRAY)
+
     # apply bilateral filter to smooth the input while keeping the edge detail
-    grayFrame = cv2.bilateralFilter(grayFrame, 7, 60, 60)
+    # this filter is not mandatory, smoothing the frame would allow better and more
+    # precise edge detection, which leads to better accuracy
+    # on the other hand this filter is very time consuming, comment it out here
+    # to save runtime
+    # grayFrame = cv2.bilateralFilter(grayFrame, 7, 60, 60)
+
     # do binary filtering to get rid of combo text
     _, grayFrame = cv2.threshold(grayFrame, BINARY_THRESH, 255, cv2.THRESH_BINARY)
 

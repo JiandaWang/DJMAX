@@ -20,6 +20,27 @@ CONFIGS = {
                                                         "s": 840, 
                                                         ";": 960, 
                                                         "\'": 1080
+                                                       }),
+    "1920W_1080H_5B": CConfig(f_judgeLinePosY_int = 765,
+                              f_noteDetectionLinePosY_int = 590,
+                              f_trackWidth_int = 96,
+                              f_noteHeight_int = 20,
+                              f_keyToTrackPosXs_dict = {"a": 720, 
+                                                        "s": 816,
+                                                        "c": 912,
+                                                        ";": 1008,
+                                                        "\'": 1104
+                                                       }),
+    "1920W_1080H_6B": CConfig(f_judgeLinePosY_int = 765,
+                              f_noteDetectionLinePosY_int = 590,
+                              f_trackWidth_int = 80,
+                              f_noteHeight_int = 20,
+                              f_keyToTrackPosXs_dict = {"a": 720, 
+                                                        "s": 800,
+                                                        "c": 880,
+                                                        ",": 960,
+                                                        ";": 1040,
+                                                        "\'": 1120
                                                        })
 }
 
