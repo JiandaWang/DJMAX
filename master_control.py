@@ -11,7 +11,7 @@ MAX_ELAPSED_TIME_SEC = 40
 # would be delayed after note crossing the judge line
 # note if this value is too much negative all the notes would be ignored
 # since such kind of a delay would be not meaningful
-TRIGGER_TOL_SEC = 0.1
+TRIGGER_TOL_SEC = 0.12
 
 class CMaster():
     def __init__(self,

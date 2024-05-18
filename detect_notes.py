@@ -63,8 +63,8 @@ def DetectLines(f_config, f_startPosX_int, f_frame):
     # this filter is not mandatory, smoothing the frame would allow better and more
     # precise edge detection, which leads to better accuracy
     # on the other hand this filter is very time consuming, comment it out here
-    # to save runtime
-    # grayFrame = cv2.bilateralFilter(grayFrame, 7, 60, 60)
+    # can save runtime
+    grayFrame = cv2.bilateralFilter(grayFrame, 7, 60, 60)
 
     # do binary filtering to get rid of combo text
     _, grayFrame = cv2.threshold(grayFrame, BINARY_THRESH, 255, cv2.THRESH_BINARY)

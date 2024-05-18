@@ -47,8 +47,8 @@ with mss.mss() as sct:
         master.updateKey()
 
         # calculate consumed time and wait time according pre-defined fps
+        # when consumed time is lower than defined cycle time, wait for the 
+        # remaining cycle; otherwise head to next cycle directly
         endTimeSec_fl = time.time()
         elapsedTimeSec_fl = endTimeSec_fl - beginTimeSec_fl
-        waitTimeSec_fl = CYCLE_TIME
-        while waitTimeSec_fl < elapsedTimeSec_fl: waitTimeSec_fl+=CYCLE_TIME
-        time.sleep(waitTimeSec_fl-elapsedTimeSec_fl)
+        if elapsedTimeSec_fl < CYCLE_TIME: time.sleep(CYCLE_TIME-elapsedTimeSec_fl)
