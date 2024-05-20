@@ -11,7 +11,7 @@ MAX_ELAPSED_TIME_SEC = 40
 # would be delayed after note crossing the judge line
 # note if this value is too much negative all the notes would be ignored
 # since such kind of a delay would be not meaningful
-TRIGGER_TOL_SEC = 0.12
+TRIGGER_TOL_SEC = 0.11
 
 class CMaster():
     def __init__(self,
@@ -65,8 +65,14 @@ class CMaster():
             # based on the note pos and type, decide wether click, press or release the key
 
             # reset click or release status from last update
+            # in few cases, a click case could be wrongly detected as press
+            # if next start note has been detected already, release it too
             if    self.m_keyStatus_dict[track.m_key_str] == "Click" \
-               or self.m_keyStatus_dict[track.m_key_str] == "Release":
+               or self.m_keyStatus_dict[track.m_key_str] == "Release" \
+               or (    self.m_keyStatus_dict[track.m_key_str] == "Press" \
+                   and len(track.m_notes_lst) > 0 \
+                   and track.m_notes_lst[0].m_startPos_b \
+                  ):
                 self.m_keyStatus_dict[track.m_key_str] = "None"
                 keyboard.release(track.m_key_str)
 
@@ -113,7 +119,6 @@ class CMaster():
                         # if end pos found, do a click
                         if endPosFound_b: 
                             self.m_keyStatus_dict[track.m_key_str] = "Click"
-                            # keyboard.press_and_release(track.m_key_str)
                             keyboard.press(track.m_key_str)
                         # otherwise if another start pos can be found as next note but
                         # outside of the tolerance range -> indicates not completely detected
@@ -121,7 +126,6 @@ class CMaster():
                         elif (    (len(track.m_notes_lst)>0)
                               and (track.m_notes_lst[0].m_startPos_b)):
                             self.m_keyStatus_dict[track.m_key_str] = "Click"
-                            # keyboard.press_and_release(track.m_key_str)
                             keyboard.press(track.m_key_str)
                         else:
                             # otherwise do a press
