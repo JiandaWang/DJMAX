@@ -4,36 +4,25 @@ from master_control import *
 from detect_notes import *
 import pickle
 
-# get config
-successful_b, config = GetConfig(f_width_int=1920, 
-                                 f_height_int=1080, 
-                                 f_buttonNumber_int=4)
-if not successful_b: 
-    print("No config found")
-    exit()
-
-# initialize master
-master = CMaster(config)
-
 # load data from saved pickle file
+with open("config.pkl", 'rb') as f:
+    config = pickle.load(f)
+
+with open("masterCache.pkl", 'rb') as f:
+    masterCacheList_lst = pickle.load(f)
+
 with open("mssCache.pkl", 'rb') as f:
     mssCacheList_lst = pickle.load(f)
 
-with open("speed.pkl", 'rb') as f:
-    speed_lst = pickle.load(f)
-master.m_elapsedPixel_int = speed_lst[0] # set speed to master
-master.m_elapsedTimeSec_fl = speed_lst[1]
+with open("trackCache.pkl", 'rb') as f:
+    trackCacheList_lst = pickle.load(f)
 
 # process the frames
-for timeStamp, frame in mssCacheList_lst:
-    # detect notes for each track
-    tracks_lst = DetectNotesInTracks(config, frame)
-
-    # update master with new tracks information
-    master.update(timeStamp, tracks_lst)
-
-    # update key status based on track information
-    master.updateKey(config, frame)
+for index in range(0,len(mssCacheList_lst)):
+    # get slice by index
+    master = masterCacheList_lst[index]
+    frame = mssCacheList_lst[index]
+    tracks_lst = trackCacheList_lst[index]
 
     # draw notes detected from master side (with estimation)
     for track in master.m_tracks_lst:

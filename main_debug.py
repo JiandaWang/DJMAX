@@ -6,11 +6,12 @@ from configs import *
 from master_control import *
 from detect_notes import *
 import pickle
+from copy import deepcopy
 
 # get config
 successful_b, config = GetConfig(f_width_int=1920, 
                                  f_height_int=1080, 
-                                 f_buttonNumber_int=4)
+                                 f_buttonNumber_int=6)
 if not successful_b: 
     print("No config found")
     exit()
@@ -20,6 +21,8 @@ master = CMaster(config)
 
 # debug
 mssCacheList_lst = []
+masterCacheList_lst = []
+trackCacheList_lst = []
 # debug
 
 FPS = 60
@@ -53,9 +56,14 @@ with mss.mss() as sct:
 
         # debug
         # append the current frame to output
-        # limit the output to last two seconds
-        mssCacheList_lst.append([beginTimeSec_fl, screenshot_npa])
-        if len(mssCacheList_lst) > FPS*2: mssCacheList_lst.pop(0)
+        # limit the output to last one seconds
+        masterCacheList_lst.append(deepcopy(master))
+        mssCacheList_lst.append(screenshot_npa)
+        trackCacheList_lst.append(tracks_lst)
+        if len(mssCacheList_lst) > FPS: 
+            mssCacheList_lst.pop(0)
+            masterCacheList_lst.pop(0)
+            trackCacheList_lst.pop(0)
         # debug
 
         # calculate consumed time and wait time according pre-defined fps
@@ -66,8 +74,12 @@ with mss.mss() as sct:
         if elapsedTimeSec_fl < CYCLE_TIME: time.sleep(CYCLE_TIME-elapsedTimeSec_fl)
 
     # debug
+    with open("config.pkl", 'wb') as f:
+        pickle.dump(config, f)
+    with open("masterCache.pkl", 'wb') as f:
+        pickle.dump(masterCacheList_lst, f)
     with open("mssCache.pkl", 'wb') as f:
         pickle.dump(mssCacheList_lst, f)
-    with open("speed.pkl", 'wb') as f:
-        pickle.dump([master.m_elapsedPixel_int, master.m_elapsedTimeSec_fl], f)
+    with open("trackCache.pkl", 'wb') as f:
+        pickle.dump(trackCacheList_lst, f)
     # debug
