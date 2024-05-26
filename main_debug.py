@@ -49,24 +49,25 @@ with mss.mss() as sct:
         master.update(beginTimeSec_fl, tracks_lst)
 
         # update key status based on track information
-        master.updateKey()
+        master.updateKey(config, screenshot_npa)
 
         # debug
-        if    "Click" in master.m_keyStatus_dict.values() \
-           or "Release" in master.m_keyStatus_dict.values() \
-           or "Press" in master.m_keyStatus_dict.values():
-            print(master.m_keyStatus_dict)
+        # append the current frame to output
+        # limit the output to last two seconds
         mssCacheList_lst.append([beginTimeSec_fl, screenshot_npa])
+        if len(mssCacheList_lst) > FPS*2: mssCacheList_lst.pop(0)
         # debug
 
         # calculate consumed time and wait time according pre-defined fps
+        # when consumed time is lower than defined cycle time, wait for the 
+        # remaining cycle; otherwise head to next cycle directly
         endTimeSec_fl = time.time()
         elapsedTimeSec_fl = endTimeSec_fl - beginTimeSec_fl
-        waitTimeSec_fl = CYCLE_TIME
-        while waitTimeSec_fl < elapsedTimeSec_fl: waitTimeSec_fl+=CYCLE_TIME
-        time.sleep(waitTimeSec_fl-elapsedTimeSec_fl)
+        if elapsedTimeSec_fl < CYCLE_TIME: time.sleep(CYCLE_TIME-elapsedTimeSec_fl)
 
     # debug
-    with open("file.pkl", 'wb') as f:
+    with open("mssCache.pkl", 'wb') as f:
         pickle.dump(mssCacheList_lst, f)
+    with open("speed.pkl", 'wb') as f:
+        pickle.dump([master.m_elapsedPixel_int, master.m_elapsedTimeSec_fl], f)
     # debug

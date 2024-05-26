@@ -44,7 +44,7 @@ with mss.mss() as sct:
         master.update(beginTimeSec_fl, tracks_lst)
 
         # update key status based on track information
-        master.updateKey()
+        master.updateKey(config, screenshot_npa)
 
         # calculate consumed time and wait time according pre-defined fps
         # when consumed time is lower than defined cycle time, wait for the 

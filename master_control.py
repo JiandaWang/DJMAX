@@ -58,20 +58,27 @@ class CMaster():
             # OPEN POINT: sound track with various speed range?
             self.__updateMasterWithOutSpeed(f_currentTimeSec_fl, f_tracks_lst)
 
-    def updateKey(self):
+    def updateKey(self, f_config, f_colorFrame):
         # loop over tracks
         for track in self.m_tracks_lst:
             # techinically only check the first note should be enough
             # based on the note pos and type, decide wether click, press or release the key
 
+            # get the color around the trigger line
+            colorPosY_int =  f_config.m_judgeLinePosY_int \
+                            -self.m_triggerTolerance_int \
+                            -int(f_config.m_noteHeight_int*0.5)
+            colorPosX_int = track.m_posX_int+int(f_config.m_trackWidth_int/2)
+            pixel_npa = f_colorFrame[colorPosY_int, colorPosX_int]
+            grayScale_int = cv2.cvtColor(np.array([[pixel_npa]]), cv2.COLOR_BGR2GRAY)[0][0]
+
             # reset click or release status from last update
             # in few cases, a click case could be wrongly detected as press
-            # if next start note has been detected already, release it too
+            # if around the trigger distance there is no color, release the press
             if    self.m_keyStatus_dict[track.m_key_str] == "Click" \
-               or self.m_keyStatus_dict[track.m_key_str] == "Release" \
+               or self.m_keyStatus_dict[track.m_key_str] == "Release"\
                or (    self.m_keyStatus_dict[track.m_key_str] == "Press" \
-                   and len(track.m_notes_lst) > 0 \
-                   and track.m_notes_lst[0].m_startPos_b \
+                   and grayScale_int < BINARY_THRESH \
                   ):
                 self.m_keyStatus_dict[track.m_key_str] = "None"
                 keyboard.release(track.m_key_str)
@@ -120,15 +127,7 @@ class CMaster():
                         if endPosFound_b: 
                             self.m_keyStatus_dict[track.m_key_str] = "Click"
                             keyboard.press(track.m_key_str)
-                        # otherwise if another start pos can be found as next note but
-                        # outside of the tolerance range -> indicates not completely detected
-                        # first note -> do a click
-                        elif (    (len(track.m_notes_lst)>0)
-                              and (track.m_notes_lst[0].m_startPos_b)):
-                            self.m_keyStatus_dict[track.m_key_str] = "Click"
-                            keyboard.press(track.m_key_str)
-                        else:
-                            # otherwise do a press
+                        else: # otherwise do a press
                             self.m_keyStatus_dict[track.m_key_str] = "Press"
                             keyboard.press(track.m_key_str)
 

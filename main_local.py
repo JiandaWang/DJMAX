@@ -16,8 +16,13 @@ if not successful_b:
 master = CMaster(config)
 
 # load data from saved pickle file
-with open("file.pkl", 'rb') as f:
+with open("mssCache.pkl", 'rb') as f:
     mssCacheList_lst = pickle.load(f)
+
+with open("speed.pkl", 'rb') as f:
+    speed_lst = pickle.load(f)
+master.m_elapsedPixel_int = speed_lst[0] # set speed to master
+master.m_elapsedTimeSec_fl = speed_lst[1]
 
 # process the frames
 for timeStamp, frame in mssCacheList_lst:
@@ -28,7 +33,7 @@ for timeStamp, frame in mssCacheList_lst:
     master.update(timeStamp, tracks_lst)
 
     # update key status based on track information
-    master.updateKey()
+    master.updateKey(config, frame)
 
     # draw notes detected from master side (with estimation)
     for track in master.m_tracks_lst:
