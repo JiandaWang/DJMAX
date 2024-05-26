@@ -11,7 +11,7 @@ from copy import deepcopy
 # get config
 successful_b, config = GetConfig(f_width_int=1920, 
                                  f_height_int=1080, 
-                                 f_buttonNumber_int=6)
+                                 f_buttonNumber_int=4)
 if not successful_b: 
     print("No config found")
     exit()
