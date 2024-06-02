@@ -70,5 +70,11 @@ for index in range(0,len(mssCacheList_lst)):
                           5
                          )
 
+    # print all key logs
+    for log in master.m_keyLogPerCycle_lst: 
+        # adjust time
+        log[2] -= masterCacheList_lst[0].m_timeStampSec_fl
+        print(log)
+
     cv2.imshow('Frame', frame)
     cv2.waitKey()

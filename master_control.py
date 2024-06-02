@@ -1,6 +1,7 @@
 from detect_notes import *
 from copy import deepcopy
 import keyboard
+import time
 
 MAX_ELAPSED_PIXEL = 100000
 MAX_ELAPSED_TIME_SEC = 40
@@ -23,6 +24,7 @@ CLICK_HOLD_SEC = 0.015
 class CMaster():
     def __init__(self,
                  f_config,
+                 f_debug_b=False
                 ):
         # time stamp of last update
         self.m_timeStampSec_fl = 0
@@ -50,11 +52,17 @@ class CMaster():
         self.m_triggerPosY_int = f_config.m_judgeLinePosY_int
         self.m_noteHeightWithTol_int = int(f_config.m_noteHeight_int*1.2)
         self.m_triggerTolerance_int = 0 # calculate based on speed each cycle
-        self.m_maxTriggerLine_int = f_config.m_noteHeight_int*2
+
+        # debug related attributes
+        self.m_debug_b = f_debug_b
+        self.m_keyLogPerCycle_lst = []
 
     def update(self, f_currentTimeSec_fl, f_tracks_lst):
+        # in case debug in on, reset the key log
+        if self.m_debug_b: self.m_keyLogPerCycle_lst = []
+
         # get current speed
-        speedAvailable_b, speed_fl = self.getSpeed()
+        speedAvailable_b, speed_fl = self.__getSpeed()
         self.m_triggerTolerance_int = int(speed_fl*TRIGGER_TOL_SEC)
 
         # check if speed available
@@ -73,34 +81,45 @@ class CMaster():
             # based on the note pos and type, decide wether click, press or release the key
 
             # get the color on note detection line
-            colorPosY_int = f_config.m_noteDetectionLinePosY_int
-            colorPosX_int = track.m_posX_int+int(f_config.m_trackWidth_int/2)
-            pixel_npa = f_colorFrame[colorPosY_int, colorPosX_int]
-            grayScale_int = cv2.cvtColor(np.array([[pixel_npa]]), cv2.COLOR_BGR2GRAY)[0][0]
+            # colorPosY_int = f_config.m_noteDetectionLinePosY_int
+            # colorPosX_int = track.m_posX_int+int(f_config.m_trackWidth_int/2)
+            # pixel_npa = f_colorFrame[colorPosY_int, colorPosX_int]
+            # grayScale_int = cv2.cvtColor(np.array([[pixel_npa]]), cv2.COLOR_BGR2GRAY)[0][0]
 
-            # reset click or release status from last update
+            # reset click status from last update
             # in few cases, a click case could be wrongly detected as press
             # if on the track there is no color, the key should be released
             # due to accuracy percentage display, the color would be taken from
             # frame clipping position of the note detection
-            if    self.m_keyStatus_dict[track.m_key_str] == "Click" \
-               or self.m_keyStatus_dict[track.m_key_str] == "Release"\
-               or (    self.m_keyStatus_dict[track.m_key_str] == "Press" \
-                   and grayScale_int < BINARY_THRESH \
-                  ):
+            if    self.m_keyStatus_dict[track.m_key_str] == "Click":
                 self.m_keyStatus_dict[track.m_key_str] = "None"
-                keyboard.release(track.m_key_str)
+            # elif    self.m_keyStatus_dict[track.m_key_str] == "Press" \
+            #     and grayScale_int < BINARY_THRESH:
+            #     self.m_keyStatus_dict[track.m_key_str] = "None"
+            #     keyboard.release(track.m_key_str)
+
+            # in case currently the key status is none, but the first note is end pos
+            # -> not sense making, skip it
+            if self.m_keyStatus_dict[track.m_key_str] == "None":
+                while (    (len(track.m_notes_lst)>0) \
+                       and (not track.m_notes_lst[0].m_startPos_b)):
+                    track.m_notes_lst.pop(0)
 
             # if no information -> skip the track
             if len(track.m_notes_lst) == 0: continue
+
+            # in case debug in on, get the current time
+            if self.m_debug_b: curTime_fl = time.time()
 
             # only proceed when the distance is close enough
             if track.m_notes_lst[0].m_PosY_int + self.m_triggerTolerance_int >= self.m_triggerPosY_int:
                 # in case it's end pos, release the key and pop out the first element
                 if not track.m_notes_lst[0].m_startPos_b:
-                    self.m_keyStatus_dict[track.m_key_str] = "Release"
+                    self.m_keyStatus_dict[track.m_key_str] = "None"
                     keyboard.release(track.m_key_str)
                     track.m_notes_lst.pop(0)
+                    # debug key log
+                    if self.m_debug_b: self.m_keyLogPerCycle_lst.append([track.m_key_str, "Release", curTime_fl])
                 else: # the note is a start pos
                     if len(track.m_notes_lst) == 1:
                         # no other information available
@@ -108,6 +127,8 @@ class CMaster():
                         self.m_keyStatus_dict[track.m_key_str] = "Press"
                         keyboard.press(track.m_key_str)
                         track.m_notes_lst.pop(0)
+                        # debug key log
+                        if self.m_debug_b: self.m_keyLogPerCycle_lst.append([track.m_key_str, "Press", curTime_fl])
                     else: # there are other notes available
                         # due to unstable screenshot performance, there could be note
                         # information which are very close to each other, but represent
@@ -119,21 +140,25 @@ class CMaster():
                         endPosFound_b = False
                         while (   (len(track.m_notes_lst)>0) 
                                and(firstStartPosY_int - track.m_notes_lst[0].m_PosY_int <= self.m_noteHeightWithTol_int)):
-                            if not track.m_notes_lst[0].m_startPos_b:
-                                track.m_notes_lst.pop(0)
-                                endPosFound_b = True
-                            else: track.m_notes_lst.pop(0)
+                            if not track.m_notes_lst[0].m_startPos_b: endPosFound_b = True
+                            track.m_notes_lst.pop(0)
                         
                         # if end pos found, do a click
                         if endPosFound_b: 
                             self.m_keyStatus_dict[track.m_key_str] = "Click"
                             keyboard.press(track.m_key_str)
                             keyboard.call_later(keyboard.release, track.m_key_str, CLICK_HOLD_SEC)
+                            # debug key log
+                            if self.m_debug_b: 
+                                self.m_keyLogPerCycle_lst.append([track.m_key_str, "Click", curTime_fl])
+                                self.m_keyLogPerCycle_lst.append([track.m_key_str, "Click_Release", curTime_fl+CLICK_HOLD_SEC])
                         else: # otherwise do a press
                             self.m_keyStatus_dict[track.m_key_str] = "Press"
                             keyboard.press(track.m_key_str)
+                            # debug key log
+                            if self.m_debug_b: self.m_keyLogPerCycle_lst.append([track.m_key_str, "Press", curTime_fl])
 
-    def getSpeed(self):
+    def __getSpeed(self):
         if self.m_elapsedPixel_int > 0 and self.m_elapsedTimeSec_fl > 0:
             return True, float(self.m_elapsedPixel_int)/float(self.m_elapsedTimeSec_fl)
         else: 

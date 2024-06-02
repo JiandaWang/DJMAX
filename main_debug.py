@@ -17,13 +17,12 @@ if not successful_b:
     exit()
 
 # initialize master
-master = CMaster(config)
+master = CMaster(config, True)
 
-# debug
+# local variables for debug
 mssCacheList_lst = []
 masterCacheList_lst = []
 trackCacheList_lst = []
-# debug
 
 FPS = 60
 CYCLE_TIME = (float)(1/FPS)
@@ -54,7 +53,6 @@ with mss.mss() as sct:
         # update key status based on track information
         master.updateKey(config, screenshot_npa)
 
-        # debug
         # append the current frame to output
         # limit the output to last one seconds
         masterCacheList_lst.append(deepcopy(master))
@@ -64,7 +62,6 @@ with mss.mss() as sct:
             mssCacheList_lst.pop(0)
             masterCacheList_lst.pop(0)
             trackCacheList_lst.pop(0)
-        # debug
 
         # calculate consumed time and wait time according pre-defined fps
         # when consumed time is lower than defined cycle time, wait for the 
@@ -73,7 +70,7 @@ with mss.mss() as sct:
         elapsedTimeSec_fl = endTimeSec_fl - beginTimeSec_fl
         if elapsedTimeSec_fl < CYCLE_TIME: time.sleep(CYCLE_TIME-elapsedTimeSec_fl)
 
-    # debug
+    # save to pickle files
     with open("config.pkl", 'wb') as f:
         pickle.dump(config, f)
     with open("masterCache.pkl", 'wb') as f:
@@ -82,4 +79,3 @@ with mss.mss() as sct:
         pickle.dump(mssCacheList_lst, f)
     with open("trackCache.pkl", 'wb') as f:
         pickle.dump(trackCacheList_lst, f)
-    # debug
