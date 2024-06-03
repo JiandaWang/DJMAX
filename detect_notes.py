@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 
-USE_CUDA = True
 BINARY_THRESH = 150
 CANNY_LOW_THRESH = 50
 CANNY_HIGH_THRESH = 150
@@ -133,6 +132,6 @@ def classifyPosY(f_config, f_frame, f_posY_int):
     lowerPixelVal_int = int(f_frame[lowerPosY_int, posX_int])
     higherPixelVal_int = int(f_frame[higherPosY_int, posX_int])
     pixelValDiff_int = lowerPixelVal_int - higherPixelVal_int
-    if pixelValDiff_int < GRADIENT_THRESH: return 1 # start pos; lower black + higher white
+    if pixelValDiff_int < -GRADIENT_THRESH: return 1 # start pos; lower black + higher white
     elif pixelValDiff_int > GRADIENT_THRESH: return -1 # end pos; lower white + higher black
     else: return 0
