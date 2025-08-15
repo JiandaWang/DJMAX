@@ -1,24 +1,17 @@
+from configs import *
+from master import *
+import mss
 import time
 import keyboard
-import mss
 import numpy as np
-from configs import *
-from master_control import *
-from detect_notes import *
-
-# get config
-successful_b, config = GetConfig(f_width_int=1920, 
-                                 f_height_int=1080, 
-                                 f_buttonNumber_int=4)
-if not successful_b: 
-    print("No config found")
-    exit()
+from copy import deepcopy
+import pickle
 
 # initialize master
-master = CMaster(config)
+master = CMaster()
+# initialize debug buffer
+debugBuffer = []
 
-FPS = 60
-CYCLE_TIME = (float)(1/FPS)
 with mss.mss() as sct:
     # get correct monitor
     monitor = sct.monitors[2]
@@ -40,7 +33,7 @@ with mss.mss() as sct:
             if keyboard.is_pressed("r"):            
                 # del and re-create master
                 del master
-                master = CMaster(config)
+                master = CMaster()
                 break
 
             # quit when q pressed
@@ -52,21 +45,38 @@ with mss.mss() as sct:
             # get start time
             beginTimeSec_fl = time.time()
                     
-            # get screen shot
+            # get screen shot and frame
             screenshot_npa = np.array(sct.grab(monitor))
+            master.getFrame(screenshot_npa)
 
-            # detect notes for each track
-            tracks_lst = DetectNotesInTracks(config, screenshot_npa)
+            # detect notes
+            master.detectLines()
 
-            # update master with new tracks information
-            master.update(beginTimeSec_fl, tracks_lst)
+            # update time, speed, prediction
+            master.updateTimeSpeedPrediction(beginTimeSec_fl)
 
-            # update key status based on track information
-            master.updateKey(config, screenshot_npa)
+            # detect key action
+            master.decideKeyAction()
+
+            # press key
+            master.pressKey()
+
+            # save debug information
+            if DEBUG:
+                debugBuffer.append(deepcopy(master))
+                if len(debugBuffer) > MAX_DEBUG_CYCLE: debugBuffer.pop(0)
+
+            # update previous buffer for next cycle
+            master.updatePrevBufferForNextCycle()
 
             # calculate consumed time and wait time according pre-defined fps
-            # when consumed time is lower than defined cycle time, wait for the 
+            # when consumed time is lower than defined cycle time, wait for the
             # remaining cycle; otherwise head to next cycle directly
             endTimeSec_fl = time.time()
             elapsedTimeSec_fl = endTimeSec_fl - beginTimeSec_fl
             if elapsedTimeSec_fl < CYCLE_TIME: time.sleep(CYCLE_TIME-elapsedTimeSec_fl)
+
+if DEBUG:
+    # save to pickle file
+    with open("debugBuffer.pkl", 'wb') as f:
+        pickle.dump(debugBuffer, f)
