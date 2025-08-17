@@ -30,7 +30,9 @@ class CMaster():
         # key actions
         self.m_curKeyActions_dict = {}
         self.m_keyTiming_dict = {}
-        for track in KEY_CONFIG.keys(): self.m_keyTiming_dict[track] = [] # initialization necessary
+        for track, key in KEY_CONFIG.items():
+            self.m_keyTiming_dict[track] = [] # initialization necessary
+            keyboard.release(key) # make sure all keys are released
 
     def getFrame(self, f_screenshot_npa):
         # crop the frame
@@ -89,28 +91,28 @@ class CMaster():
                 # get the delay
                 delay_fl = (JUDGE_LINE_POS_Y - line) / speed_fl
                 # get classfication
-                type_str, classification_str = self.__classifyLine_str(line, track)
+                type_str, endTrack_str, startTrack_str = self.__classifyLine(line, track)
                 # if end line, add release action
-                if type_str == "end":
-                    self.m_curKeyActions_dict[classification_str].append(("release", delay_fl))
-                    index += 1
-                elif classification_str == "middle": index += 1
-                else:
-                    # depends on the color, check whether it's click or press
-                    if self.__classifyLine_str(line-NOTE_HEIGHT, track)[0] == "end":
+                if type_str == "end" or type_str == "both":
+                    self.m_curKeyActions_dict[endTrack_str].append(("release", delay_fl))
+                # if start line, depends on the color, check whether it's click or press
+                if type_str == "start" or type_str == "both":
+                    if self.__classifyLine(line-NOTE_HEIGHT, track)[0] == "end":
                         # upper line is and "end", it has to be a click
                         # but only trigger when not duplicated
-                        if not self.__checkDuplication(classification_str, delay_fl):
-                            self.m_curKeyActions_dict[classification_str].append(("click", delay_fl))
-                            self.m_keyTiming_dict[classification_str].append(self.m_curTimeStampSec_fl + delay_fl)
+                        if not self.__checkDuplication(startTrack_str, delay_fl):
+                            self.m_curKeyActions_dict[startTrack_str].append(("click", delay_fl))
+                            self.m_keyTiming_dict[startTrack_str].append(self.m_curTimeStampSec_fl + delay_fl)
                         # ignore everything within one note height
-                        while index < len(lines) and lines[index] >= line - NOTE_HEIGHT_TOL: index += 1
-                    elif not self.__checkDuplication(classification_str, delay_fl): 
+                        # notice there is one extra index += 1 at the end
+                        while index < (len(lines)-1) and lines[index+1] >= line - NOTE_HEIGHT_TOL: index += 1
+                    elif not self.__checkDuplication(startTrack_str, delay_fl): 
                         # long key activation, use press, when not duplicated
-                        self.m_curKeyActions_dict[classification_str].append(("press", delay_fl))
-                        self.m_keyTiming_dict[classification_str].append(self.m_curTimeStampSec_fl + delay_fl)
-                        index += 1
-                    else: index += 1
+                        self.m_curKeyActions_dict[startTrack_str].append(("press", delay_fl))
+                        self.m_keyTiming_dict[startTrack_str].append(self.m_curTimeStampSec_fl + delay_fl)
+                    else: pass
+                # increase index
+                index += 1
             # after procesing, keep the remaining slice for next cycle
             lines = lines[index:]
 
@@ -132,6 +134,10 @@ class CMaster():
         self.m_prevDetectedLines_dict = deepcopy(self.m_curDetectedLines_dict)
         self.m_prevColorFrame = deepcopy(self.m_curColorFrame)
         self.m_prevGrayFrame = deepcopy(self.m_curGrayFrame)
+
+    def clean(self):
+        # release all the keys
+        for key in KEY_CONFIG.values(): keyboard.release(key)
 
     def __speedAvailable_b(self):
         if self.m_elapsedPixel_int > 0 and self.m_elapsedTimeSec_fl > 0: return True
@@ -173,7 +179,7 @@ class CMaster():
                 curPosY_int = curLines_lst[curIndex_int]
                 # use previous position and frame for color check
                 # use predicted position for position check
-                if self.__classifyLine_str(prevPosY_int, track, True)[0] == self.__classifyLine_str(curPosY_int, track)[0] and \
+                if self.__classifyLine(prevPosY_int, track, True)[0] == self.__classifyLine(curPosY_int, track)[0] and \
                    abs(predPosY_int - curPosY_int) <= LINE_MATCH_THRESHOLD:
                     self.m_elapsedPixel_int += curPosY_int - prevPosY_int # here use previous position not prediction
                     self.m_elapsedTimeSec_fl += self.m_curTimeStampSec_fl - self.m_prevTimeStampSec_fl
@@ -186,7 +192,7 @@ class CMaster():
             self.m_elapsedPixel_int = int(self.m_elapsedPixel_int/2)
             self.m_elapsedTimeSec_fl /= 2
 
-    def __classifyLine_str(self, f_posY_int, f_track_str, prev = False):
+    def __classifyLine(self, f_posY_int, f_track_str, prev = False):
         # based on the pixel color arround the line, decide what kind if line is detected
         # ...
 
@@ -199,22 +205,14 @@ class CMaster():
         lowerColor, lowerLayer = self.__classifyColor(lower)
         # classification
         if upperLayer < lowerLayer:
-            type_str = "end"
-            criticalColor = lowerColor
-        elif upperLayer == lowerLayer: return "middle", "none" # in the middle of long key
+            return "end", self.__decideOutputTrack_str(f_track_str, lowerColor), "none"
+        elif upperLayer == lowerLayer:
+            # check if we have different upper and lower color -> special handling for blue connected with red
+            if not upperColor == lowerColor:
+                return "both", self.__decideOutputTrack_str(f_track_str, lowerColor), self.__decideOutputTrack_str(f_track_str, upperColor)
+            else: return "middle", "none", "none" # in the middle of long key
         else:
-            type_str = "start"
-            criticalColor = upperColor
-        # decide track
-        if criticalColor == "blue":
-            if "side left" in SPECIAL_KEY_MAPPING[f_track_str]: track_str = "side left"
-            else: track_str = "side right"
-        elif criticalColor == "red":
-            if "left" in SPECIAL_KEY_MAPPING[f_track_str]: track_str = "left"
-            else: track_str = "right"
-        else: track_str = f_track_str
-        # return
-        return type_str, track_str
+            return "start", "none", self.__decideOutputTrack_str(f_track_str, upperColor)
 
     def __classifyColor(self, f_pixel_npa):
         if f_pixel_npa[0] <= BGR_BLACK[0] and f_pixel_npa[1] <= BGR_BLACK[1] and f_pixel_npa[2] <= BGR_BLACK[2]:
@@ -228,6 +226,15 @@ class CMaster():
         elif f_pixel_npa[0] >= BGR_RED[0] and f_pixel_npa[0] <= BGR_RED[1] and f_pixel_npa[1] <= BGR_RED[2] and f_pixel_npa[2] >= BGR_RED[3]:
             return "red", COLOR_LAYER["red"]
         else: return "black", COLOR_LAYER["black"] # default return black, should never reach here
+
+    def __decideOutputTrack_str(self, f_track_str, f_color_str):
+        if f_color_str == "blue":
+            if "side left" in SPECIAL_KEY_MAPPING[f_track_str]: return "side left"
+            else: return "side right"
+        elif f_color_str == "red":
+            if "left" in SPECIAL_KEY_MAPPING[f_track_str]: return "left"
+            else: return "right"
+        else: return f_track_str
 
     def __checkDuplication(self, f_track_str, f_delay_fl):
         # only for debug

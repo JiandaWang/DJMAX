@@ -48,7 +48,7 @@ BGR_WHITE = [180, 180, 180]
 BGR_ORANGE = [80, 160, 220]
 BGR_BLUE = [180, 180, 80]
 BGR_RED = [60, 160, 20, 200]
-COLOR_LAYER = {"black": 0, "blue": 1, "red": 2, "white": 3, "orange": 3}
+COLOR_LAYER = {"black": 0, "blue": 1, "red": 1, "white": 2, "orange": 2}
 
 # thresholds for key activation
 COOLDOWN = 0.01 # avoid duplicated triggering within cooldown time
