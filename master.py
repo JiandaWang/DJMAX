@@ -201,20 +201,25 @@ class CMaster():
         upper = self.m_curColorFrame[f_posY_int - COLOR_PICK_OFFSET][posX_int]
         lower = self.m_curColorFrame[f_posY_int + COLOR_PICK_OFFSET][posX_int]
         # classify color and layer
-        upperColor, upperLayer = self.__classifyColor(upper)
-        lowerColor, lowerLayer = self.__classifyColor(lower)
-        # classification
-        if upperLayer < lowerLayer:
-            return "end", self.__decideOutputTrack_str(f_track_str, lowerColor), "none"
-        elif upperLayer == lowerLayer:
-            # check if we have different upper and lower color -> special handling for blue connected with red
+        upperColor, upperLayer = self.__classifyColor(upper, f_track_str)
+        lowerColor, lowerLayer = self.__classifyColor(lower, f_track_str)
+
+        diff = int(upperLayer - lowerLayer)
+        if diff < 0:
+            # an end for lower layer is ensured
+            # for non black upper layer it should be treated as a start
+            if not upperColor == "black":
+                return "both", self.__decideOutputTrack_str(f_track_str, lowerColor), self.__decideOutputTrack_str(f_track_str, upperColor)
+            else: return "end", self.__decideOutputTrack_str(f_track_str, lowerColor), "none"
+        elif diff == 0:
+            # check if we have different upper and lower color
             if not upperColor == lowerColor:
                 return "both", self.__decideOutputTrack_str(f_track_str, lowerColor), self.__decideOutputTrack_str(f_track_str, upperColor)
             else: return "middle", "none", "none" # in the middle of long key
         else:
             return "start", "none", self.__decideOutputTrack_str(f_track_str, upperColor)
 
-    def __classifyColor(self, f_pixel_npa):
+    def __classifyColor(self, f_pixel_npa, f_track_str):
         if f_pixel_npa[0] <= BGR_BLACK[0] and f_pixel_npa[1] <= BGR_BLACK[1] and f_pixel_npa[2] <= BGR_BLACK[2]:
             return "black", COLOR_LAYER["black"]
         elif f_pixel_npa[0] >= BGR_WHITE[0] and f_pixel_npa[1] >= BGR_WHITE[1] and f_pixel_npa[2] >= BGR_WHITE[2]:
@@ -222,7 +227,9 @@ class CMaster():
         elif f_pixel_npa[0] <= BGR_ORANGE[0] and f_pixel_npa[1] >= BGR_ORANGE[1] and f_pixel_npa[2] >= BGR_ORANGE[2]:
             return "orange", COLOR_LAYER["orange"]
         elif f_pixel_npa[0] >= BGR_BLUE[0] and f_pixel_npa[1] >= BGR_BLUE[1] and f_pixel_npa[2] <= BGR_BLUE[2]:
-            return "blue", COLOR_LAYER["blue"]
+            # in case 5B in the middle the blue color should treated just like black; special handling
+            if VARIANT == "5B" and f_track_str == "track3": return "black", COLOR_LAYER["black"]
+            else: return "blue", COLOR_LAYER["blue"]
         elif f_pixel_npa[0] >= BGR_RED[0] and f_pixel_npa[0] <= BGR_RED[1] and f_pixel_npa[1] <= BGR_RED[2] and f_pixel_npa[2] >= BGR_RED[3]:
             return "red", COLOR_LAYER["red"]
         else: return "black", COLOR_LAYER["black"] # default return black, should never reach here

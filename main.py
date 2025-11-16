@@ -26,12 +26,18 @@ with mss.mss() as sct:
                 # set quit program to true
                 quitProgram_b = True
                 break
+            # wait certain time to avoid high load to ecu
+            time.sleep(0.01)
         while not quitProgram_b:
             # reset when r pressed
-            if keyboard.is_pressed("r"):            
+            if keyboard.is_pressed("r"):
                 # del and re-create master
                 del master
                 master = CMaster()
+                # del and re-initialize debug buffer
+                if DEBUG:
+                    del debugBuffer
+                    debugBuffer = []
                 break
             # quit when q pressed
             if keyboard.is_pressed("q"):

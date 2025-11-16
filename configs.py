@@ -24,6 +24,9 @@ class CSpeficic():
 
 
 #################### CONFIG VALUES STARTS HERE ####################
+# variant
+VARIANT = "4B"
+
 # debug flag
 DEBUG = False
 # max cycle number for debug buffer
@@ -45,16 +48,13 @@ MAX_ELAPSED_TIME_SEC = 250
 COLOR_PICK_OFFSET = 10
 BGR_BLACK = [40, 40, 40]
 BGR_WHITE = [180, 180, 180]
-BGR_ORANGE = [80, 160, 220]
+BGR_ORANGE = [80, 140, 220]
 BGR_BLUE = [180, 180, 80]
 BGR_RED = [60, 160, 20, 200]
-COLOR_LAYER = {"black": 0, "blue": 1, "red": 1, "white": 2, "orange": 2}
+COLOR_LAYER = {"black": 0, "red": 1, "blue": 1.5, "white": 2, "orange": 2}
 
 # thresholds for key activation
 COOLDOWN = 0.01 # avoid duplicated triggering within cooldown time
-
-# variant
-VARIANT = "1920W_1080H_6B8B"
 
 # variant specific configs
 KEY_CONFIG_4B = {"track1": "a", "track2": "s", "track3": ";", "track4": "\'", "side left": "left shift", "side right": "right shift"}
@@ -81,41 +81,41 @@ SPECIAL_KEY_MAPPING_6B8B = {"track1": ("side left", "left"),
                            }
 
 SPECIFICS = {
-    "1920W_1080H_4B": CSpeficic(f_judgeLinePosY_int = 765,
-                                f_noteDetectionLinePosY_int = 550,
-                                f_keyActionLinePosY_int = 450,
-                                f_leftEdge_int = 720,
-                                f_rightEdge_int = 1200,
-                                f_trackWidth_int = 120,
-                                f_noteHeight_int = 20,
-                                f_trackPosXs_dict = {"track1": 720, "track2": 840, "track3": 960, "track4": 1080},
-                                f_keyConfig_dict = KEY_CONFIG_4B,
-                                f_specialKeyMapping_dict = SPECIAL_KEY_MAPPING_4B
-                               ),
+    "4B": CSpeficic(f_judgeLinePosY_int = 765,
+                    f_noteDetectionLinePosY_int = 550,
+                    f_keyActionLinePosY_int = 450,
+                    f_leftEdge_int = 720,
+                    f_rightEdge_int = 1200,
+                    f_trackWidth_int = 120,
+                    f_noteHeight_int = 20,
+                    f_trackPosXs_dict = {"track1": 720, "track2": 840, "track3": 960, "track4": 1080},
+                    f_keyConfig_dict = KEY_CONFIG_4B,
+                    f_specialKeyMapping_dict = SPECIAL_KEY_MAPPING_4B
+                   ),
 
-    "1920W_1080H_5B": CSpeficic(f_judgeLinePosY_int = 765,
-                                f_noteDetectionLinePosY_int = 550,
-                                f_keyActionLinePosY_int = 450,
-                                f_leftEdge_int = 720,
-                                f_rightEdge_int = 1200,
-                                f_trackWidth_int = 96,
-                                f_noteHeight_int = 20,
-                                f_trackPosXs_dict = {"track1": 720, "track2": 816, "track3": 912, "track4": 1008, "track5": 1104},
-                                f_keyConfig_dict = KEY_CONFIG_5B,
-                                f_specialKeyMapping_dict = SPECIAL_KEY_MAPPING_5B
-                               ),
+    "5B": CSpeficic(f_judgeLinePosY_int = 765,
+                    f_noteDetectionLinePosY_int = 550,
+                    f_keyActionLinePosY_int = 450,
+                    f_leftEdge_int = 720,
+                    f_rightEdge_int = 1200,
+                    f_trackWidth_int = 96,
+                    f_noteHeight_int = 20,
+                    f_trackPosXs_dict = {"track1": 720, "track2": 816, "track3": 912, "track4": 1008, "track5": 1104},
+                    f_keyConfig_dict = KEY_CONFIG_5B,
+                    f_specialKeyMapping_dict = SPECIAL_KEY_MAPPING_5B
+                   ),
 
-    "1920W_1080H_6B8B": CSpeficic(f_judgeLinePosY_int = 765,
-                                  f_noteDetectionLinePosY_int = 550,
-                                  f_keyActionLinePosY_int = 450,
-                                  f_leftEdge_int = 720,
-                                  f_rightEdge_int = 1200,
-                                  f_trackWidth_int = 80,
-                                  f_noteHeight_int = 20,
-                                  f_trackPosXs_dict = {"track1": 720, "track2": 800, "track3": 880, "track4": 960, "track5": 1040, "track6": 1120},
-                                  f_keyConfig_dict = KEY_CONFIG_6B8B,
-                                  f_specialKeyMapping_dict = SPECIAL_KEY_MAPPING_6B8B
-                                 )                                
+    "6B8B": CSpeficic(f_judgeLinePosY_int = 765,
+                      f_noteDetectionLinePosY_int = 550,
+                      f_keyActionLinePosY_int = 450,
+                      f_leftEdge_int = 720,
+                      f_rightEdge_int = 1200,
+                      f_trackWidth_int = 80,
+                      f_noteHeight_int = 20,
+                      f_trackPosXs_dict = {"track1": 720, "track2": 800, "track3": 880, "track4": 960, "track5": 1040, "track6": 1120},
+                      f_keyConfig_dict = KEY_CONFIG_6B8B,
+                      f_specialKeyMapping_dict = SPECIAL_KEY_MAPPING_6B8B
+                     )                                
 }
 
 ##################### DERIVED CONFIG VALUES #####################
