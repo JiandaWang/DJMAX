@@ -6,6 +6,8 @@ import keyboard
 import numpy as np
 from copy import deepcopy
 import pickle
+import cv2
+from main_replay import visualization
 
 # initialize master
 master = CMaster()
@@ -14,7 +16,7 @@ debugBuffer = []
 
 with mss.mss() as sct:
     # get correct monitor
-    monitor = sct.monitors[2]
+    monitor = sct.monitors[GAME_MONITOR_NUMBER]
     # outmost while loop
     quitProgram_b = False
     while not quitProgram_b:
@@ -38,6 +40,9 @@ with mss.mss() as sct:
                 if DEBUG:
                     del debugBuffer
                     debugBuffer = []
+                # destroy all display windows
+                if DISPLAY:
+                    cv2.destroyAllWindows()
                 break
             # quit when q pressed
             if keyboard.is_pressed("q"):
@@ -61,6 +66,9 @@ with mss.mss() as sct:
             if DEBUG:
                 debugBuffer.append(deepcopy(master))
                 if len(debugBuffer) > MAX_DEBUG_CYCLE: debugBuffer.pop(0)
+            # display window
+            if DISPLAY:
+                visualization(master, "overlay")
             # update previous buffer for next cycle
             master.updatePrevBufferForNextCycle()
             # calculate consumed time and wait time according pre-defined fps

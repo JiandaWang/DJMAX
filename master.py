@@ -13,6 +13,7 @@ class CMaster():
         self.m_curGrayFrame = []
         self.m_prevColorFrame = []
         self.m_prevGrayFrame = []
+        self.m_cannyFrame = []
 
         # detected lines
         self.m_curDetectedLines_dict = {}
@@ -41,6 +42,9 @@ class CMaster():
         self.m_curGrayFrame = cv2.cvtColor(self.m_curColorFrame, cv2.COLOR_BGR2GRAY)
 
     def detectLines(self):
+        # reset canny frame
+        if DISPLAY: self.m_cannyFrame = []
+
         for track, leftPos in TRACK_POS_X.items():
             # reset
             self.m_curDetectedLines_dict[track] = []
@@ -64,6 +68,11 @@ class CMaster():
                     if abs(y2 - y1) <= HOUGH_HORIZONTAL_LINE_Y_DIFF: self.m_curDetectedLines_dict[track].append(int((y1+y2)/2)+NOTE_DETECT_START_LINE_POS_Y)
                 # sort the current detected lines
                 self.m_curDetectedLines_dict[track].sort(reverse=True)
+            
+            # save canny outputs
+            if DISPLAY:
+                if len(self.m_cannyFrame) == 0: self.m_cannyFrame = edges
+                else: self.m_cannyFrame = cv2.hconcat([self.m_cannyFrame, edges])
 
     def updateTimeSpeedPrediction(self, f_curTimeSec_fl):
         # save the current time stamp

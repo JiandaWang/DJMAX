@@ -29,6 +29,7 @@ VARIANT = "4B"
 
 # debug flag
 DEBUG = False
+DISPLAY = False
 # max cycle number for debug buffer
 MAX_DEBUG_CYCLE = 60
 
@@ -117,6 +118,13 @@ SPECIFICS = {
                       f_specialKeyMapping_dict = SPECIAL_KEY_MAPPING_6B8B
                      )                                
 }
+
+# monitor related config
+GAME_MONITOR_NUMBER = 2 # 0 if you only have one monitor
+GAME_MONITOR_WIDTH = 1920
+GAME_MONITOR_HEIGHT = 1080
+DEBUG_MONITOR_WIDTH = 2560
+DEBUG_MONITOR_HEIGHT = 1440
 
 ##################### DERIVED CONFIG VALUES #####################
 JUDGE_LINE_POS_Y = SPECIFICS[VARIANT].m_judgeLinePosY_int
